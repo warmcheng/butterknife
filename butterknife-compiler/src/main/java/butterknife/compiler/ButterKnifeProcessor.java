@@ -154,11 +154,15 @@ public final class ButterKnifeProcessor extends AbstractProcessor {
             }
         }
 
+        // 取到 OPTION_DEBUGGABLE 的值
         debuggable = !"false".equals(env.getOptions().get(OPTION_DEBUGGABLE));
 
         elementUtils = env.getElementUtils();
         typeUtils = env.getTypeUtils();
         filer = env.getFiler();
+        // processingEnv 是 AbstractProcessor 中的 protected 修饰的 ProcessingEnvironment
+        // init(ProcessingEnvironment processingEnv)中直接将参数processingEnv 赋值给了变量 processingEnv
+        // （此处直接将 processingEnv 变为 env ，结果应该是一样的）
         try {
             trees = Trees.instance(processingEnv);
         } catch (IllegalArgumentException ignored) {
@@ -205,7 +209,7 @@ public final class ButterKnifeProcessor extends AbstractProcessor {
         annotations.add(BindString.class);
         annotations.add(BindView.class);
         annotations.add(BindViews.class);
-        annotations.addAll(LISTENERS); // LISTENERS 中包含的是跟“事件”相关的注解
+        annotations.addAll(LISTENERS); // 监听器相关注解
 
         return annotations;
     }
@@ -220,7 +224,9 @@ public final class ButterKnifeProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> elements, RoundEnvironment env) {
         Map<TypeElement, BindingSet> bindingMap = findAndParseTargets(env);
 
+        // Entry 为 Map 中的一个实体，包含键值对
         for (Map.Entry<TypeElement, BindingSet> entry : bindingMap.entrySet()) {
+            // typeElement 主要是用来打印错误信息，我们真正需要的是 binding，我们用它来生成 Java 文件
             TypeElement typeElement = entry.getKey();
             BindingSet binding = entry.getValue();
 
@@ -1342,7 +1348,7 @@ public final class ButterKnifeProcessor extends AbstractProcessor {
         if (args.length > 0) {
             message = String.format(message, args);
         }
-
+        // 打印错误信息
         processingEnv.getMessager().printMessage(kind, message, element);
     }
 
@@ -1390,8 +1396,10 @@ public final class ButterKnifeProcessor extends AbstractProcessor {
             for (Element element : env.getElementsAnnotatedWith(annotation)) {
                 JCTree tree = (JCTree) trees.getTree(element, getMirror(element, annotation));
                 if (tree != null) { // tree can be null if the references are compiled types and not source
+                    //获取R文件的包元素
+                    // 这里set的package获取的是对应的注解声明所在的类的路径,例com.example.butterknife.library.adapter
                     scanner.setCurrentPackage(elementUtils.getPackageOf(element));
-                    tree.accept(scanner);
+                    tree.accept(scanner);//遍历语法树
                 }
             }
         }
@@ -1400,6 +1408,7 @@ public final class ButterKnifeProcessor extends AbstractProcessor {
                 : scanner.getRClasses().entrySet()) {
             PackageElement respectivePackageName = packageNameToRClassSet.getKey();
             for (Symbol.ClassSymbol rClass : packageNameToRClassSet.getValue()) {
+                //解析R文件
                 parseRClass(respectivePackageName, rClass, scanner.getReferenced());
             }
         }
@@ -1417,6 +1426,7 @@ public final class ButterKnifeProcessor extends AbstractProcessor {
 
         JCTree tree = (JCTree) trees.getTree(element);
         if (tree != null) { // tree can be null if the references are compiled types and not source
+            // 利用IdScanner寻找R文件内部类,如array,attr,string等
             IdScanner idScanner =
                     new IdScanner(symbols, elementUtils.getPackageOf(element), respectivePackageName,
                             referenced);
