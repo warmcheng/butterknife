@@ -1399,7 +1399,8 @@ public final class ButterKnifeProcessor extends AbstractProcessor {
                     //获取R文件的包元素
                     // 这里set的package获取的是对应的注解声明所在的类的路径,例com.example.butterknife.library.adapter
                     scanner.setCurrentPackage(elementUtils.getPackageOf(element));
-                    tree.accept(scanner);//遍历语法树
+                    // 这里使用了设计模式中的访问者模式，使用 RClassScanner 来遍历语法树
+                    tree.accept(scanner);
                 }
             }
         }
@@ -1468,6 +1469,9 @@ public final class ButterKnifeProcessor extends AbstractProcessor {
         }
     }
 
+    /**
+     * 进行词法分析
+     */
     private static class RClassScanner extends TreeScanner {
         // Maps the currently evaluated rPackageName to R Classes
         private final Map<PackageElement, Set<Symbol.ClassSymbol>> rClasses = new LinkedHashMap<>();
