@@ -16,6 +16,10 @@ dependencies {
     testImplementation deps.truth
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
 checkstyle {
     configFile rootProject.file('checkstyle.xml')
     showViolations true

@@ -8,6 +8,10 @@ android {
     targetCompatibility = JavaVersion.VERSION_1_7
   }
 
+  tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+  }
+
   defaultConfig {
     applicationId 'com.example.butterknife'
     minSdkVersion versions.minSdk
